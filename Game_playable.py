@@ -1,6 +1,7 @@
 import pygame as pg
 import random
 import math
+from PIL import Image
 
 pg.init()
 W,H=640,360
@@ -10,13 +11,10 @@ Speed=2
 PaddleH,PaddleW=50,10
 WIN=7
 GAME_C=0
-# TODO : Make Level System with Multiple Balls
-# TODO : Make Power ups obtained by hitting em from ball
-# TODO : Hit streak Higher gives Benfits like faster ball hit (fire ball)
-# def DrawPaddleAndScore();
 
 P1=1
 P2=0
+
 class PaddleGame():
     def __init__(self):
         self.p1=PaddlePlayer(1,"tag_1",win=P1)
@@ -53,12 +51,7 @@ class PaddleGame():
             
     def checkwin(self):
         global P1 ,P2
-        # if P2>11:
-        #     P2+=1
-        #     self.reset()
-        # elif P1>11:
-        #     P1+=1
-        #     self.reset()
+
         if self.P1goal.colliderect(self.ball.rect):
             P1+=1
             self.reset()
@@ -71,11 +64,18 @@ class PaddleGame():
         self.p1.draw(SCREEN)
         self.p2.draw(SCREEN)
         self.ball.draw(SCREEN)
-        
+    
+    def get_obs(Screen):
+        im=pg.image.tobytes(Screen,"GRAY")
+        return Image.frombytes("L",Screen.get_size(),im)
+
     def reset(self):
         global GAME_C
         GAME_C+=1
-        self.__init__()
+        self.p1=PaddlePlayer(1,"tag_1",win=P1)
+        self.p2=PaddlePlayer(2,"tag_2",win=P2)
+        self.ball=ball(1,5,7.5)
+        self.ball.startCalc()
 
 class ball(pg.sprite.Sprite):
     def __init__(self,n,speed,r=5):
@@ -93,7 +93,7 @@ class ball(pg.sprite.Sprite):
         self.rect=self.mask.get_rect(center=(W/2+5,H/2))
         
         self.angle=None
-    def startCalc(self,ran=[30,330]):
+    def startCalc(self):
         r1,r2=random.uniform(-45,45),random.uniform(135,225)
         self.angle=random.choice([r1,r2])
         # print(startAngle)
@@ -105,7 +105,7 @@ class ball(pg.sprite.Sprite):
         smth=math.cos(rads)
         self.speedx=smth*self.speed
         
-    def checkColl(self,objs,Predictability=1):
+    def checkColl(self,objs):
         collObjs=pg.sprite.spritecollide(self,objs,False,pg.sprite.collide_mask)
         if collObjs:
             # self.startCalc([self.angle-Predictability,self.angle+Predictability])
@@ -167,7 +167,7 @@ class PaddlePlayer(pg.sprite.Sprite):
         else:
             self.movef=0
             self.currentSpeed=0
-        # So I wanted a Bit of a Recoil or smt on walls
+
         if self.rect.y+PaddleH>=H:
             self.rect.y-=self.s*(2)
         if self.rect.y<=0:
@@ -199,7 +199,8 @@ class PaddlePlayer(pg.sprite.Sprite):
 #         p2.draw(SCREEN)
 #         pg.display.flip()
 #         CLOCK.tick(60)
-        
-game=PaddleGame()
-game.main()
-pg.quit()
+
+if __name__=="__main__":
+    game=PaddleGame()
+    game.main()
+    pg.quit()
